@@ -116,11 +116,13 @@
     <Compile Include="ITokenStore.cs" />
     <Compile Include="JsonDotNetSerializer.cs" />
     <Compile Include="JsonDotNetSerializerExtensions.cs" />
+    <Compile Include="OAuth2\AbstractTokenManager.cs" />
     <Compile Include="OAuth2\DefaultTokenManager.cs" />
     <Compile Include="OAuth2\ITokenManager.cs" />
     <Compile Include="OAuth2\OAuth2AccessToken.cs" />
     <Compile Include="OAuth2\OAuth2AutoRefreshInterceptor.cs" />
     <Compile Include="OAuth2\OAuth2Helper.cs" />
+    <Compile Include="OAuth2\StoreTokenManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="StringAttributeExtensions.cs" />
     <Compile Include="StringValueAttribute.cs" />

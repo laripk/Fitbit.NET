@@ -158,6 +158,20 @@ namespace Fitbit.Api.Portable
             AccessToken = await TokenManager.RefreshTokenAsync(this);
             return AccessToken;
         }
+
+		/// <summary>
+		/// helper for the token managers
+		/// </summary>
+		/// <returns></returns>
+		public FormUrlEncodedContent BuildRefreshFormContent()
+		{
+			var content = new FormUrlEncodedContent(new[]
+			{
+				new KeyValuePair<string, string>("grant_type", "refresh_token"),
+				new KeyValuePair<string, string>("refresh_token", this.AccessToken.RefreshToken),
+			});
+			return content;
+		}
         
         /// <summary>
         /// Requests the activity details of the encoded user id or if none supplied the current logged in user for the specified date

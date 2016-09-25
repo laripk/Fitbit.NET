@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -14,15 +15,17 @@ namespace Fitbit.Api.Portable.OAuth2
 
         private const string OAuthBase = "/oauth2";
 
-        private string ClientId;
-        private string ClientSecret;
+		private FitbitAppCredentials AppCredentials;
+        //private string ClientId;
+        //private string ClientSecret;
 
         private string RedirectUri;
 
         public OAuth2Helper(FitbitAppCredentials credentials, string redirectUri)
         {
-            this.ClientId = credentials.ClientId;
-            this.ClientSecret = credentials.ClientSecret;
+			this.AppCredentials = credentials;
+            //this.ClientId = credentials.ClientId;
+            //this.ClientSecret = credentials.ClientSecret;
             this.RedirectUri = redirectUri;
         }
         public string GenerateAuthUrl(string[] scopeTypes, string state = null)
@@ -33,7 +36,7 @@ namespace Fitbit.Api.Portable.OAuth2
             sb.Append(OAuthBase);
             sb.Append("/authorize?");
             sb.Append("response_type=code");
-            sb.Append(string.Format("&client_id={0}", this.ClientId));
+            sb.Append(string.Format("&client_id={0}", this.AppCredentials.ClientId));
             sb.Append(string.Format("&redirect_uri={0}", Uri.EscapeDataString(this.RedirectUri)));
             sb.Append(string.Format("&scope={0}", String.Join(" ", scopeTypes)));
 
@@ -43,7 +46,13 @@ namespace Fitbit.Api.Portable.OAuth2
             return sb.ToString();
         }
 
-        public async Task<OAuth2AccessToken> ExchangeAuthCodeForAccessTokenAsync(string code)
+		public static void AddSecretToAuthHeader(HttpClient client, FitbitAppCredentials credentials)
+		{
+			string clientIdConcatSecret = OAuth2Helper.Base64Encode(credentials.ClientId + ":" + credentials.ClientSecret);
+			client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", clientIdConcatSecret);
+		}
+
+		public async Task<OAuth2AccessToken> ExchangeAuthCodeForAccessTokenAsync(string code)
         {
             HttpClient httpClient = new HttpClient();
 
@@ -52,16 +61,13 @@ namespace Fitbit.Api.Portable.OAuth2
             var content = new FormUrlEncodedContent(new[]
             {
                 new KeyValuePair<string, string>("grant_type", "authorization_code"),
-                new KeyValuePair<string, string>("client_id", ClientId),
+                new KeyValuePair<string, string>("client_id", AppCredentials.ClientId),
                 //new KeyValuePair<string, string>("client_secret", AppSecret),
                 new KeyValuePair<string, string>("code", code),
                 new KeyValuePair<string, string>("redirect_uri", this.RedirectUri)
             });
 
-
-            string clientIdConcatSecret = OAuth2Helper.Base64Encode(ClientId + ":" + ClientSecret);
-
-            httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", clientIdConcatSecret);
+			AddSecretToAuthHeader(httpClient, AppCredentials);
 
             HttpResponseMessage response = await httpClient.PostAsync(postUrl, content);
             string responseString = await response.Content.ReadAsStringAsync();
